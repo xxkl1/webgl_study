@@ -4,7 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+dependencies:
+  gl-matrix:
+    specifier: ^3.4.3
+    version: 3.4.3
+
 devDependencies:
+  '@types/gl-matrix':
+    specifier: ^3.2.0
+    version: 3.2.0
   typescript:
     specifier: ^5.0.2
     version: 5.0.2
@@ -212,6 +220,13 @@ packages:
     dev: true
     optional: true
 
+  /@types/gl-matrix@3.2.0:
+    resolution: {integrity: sha512-CY4JAtSOGQX7rVgqVuOk7ZfaLv8VeadDMPj3smMOy8Hp/YiHONa3Mr0mEUgbo0eEwV7+Owpf6BwspcA7hv4NXg==}
+    deprecated: This is a stub types definition. gl-matrix provides its own type definitions, so you do not need this installed.
+    dependencies:
+      gl-matrix: 3.4.3
+    dev: true
+
   /esbuild@0.18.18:
     resolution: {integrity: sha512-UckDPWvdVJLNT0npk5AMTpVwGRQhS76rWFLmHwEtgNvWlR9sgVV1eyc/oeBtM86q9s8ABBLMmm0CwNxhVemOiw==}
     engines: {node: '>=12'}
@@ -249,6 +264,9 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /gl-matrix@3.4.3:
+    resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
 
   /nanoid@3.3.6:
     resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
