@@ -1,3 +1,5 @@
+import { initShaderProgram } from './utils/shader'
+
 const drawLine = function (gl: WebGLRenderingContext) {
     // 定义顶点着色器代码
     const vertexShaderSource = `
@@ -5,7 +7,7 @@ const drawLine = function (gl: WebGLRenderingContext) {
             void main() {
                 gl_Position = vec4(a_position, 0.0, 1.0);
             }
-        `
+    `
 
     // 定义片元着色器代码
     const fragmentShaderSource = `
@@ -13,39 +15,15 @@ const drawLine = function (gl: WebGLRenderingContext) {
             void main() {
                 gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // 红色
             }
-        `
+    `
 
-    /**
-     * 创键顶点着色器
-     * 看起来是套路写法，需要编译glsl，最终顶点着色器在vertexShader
-     */
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER)!
-    gl.shaderSource(vertexShader, vertexShaderSource)
-    gl.compileShader(vertexShader)
-
-    /**
-     * 创键片段着色器
-     * 看起来是套路写法，需要编译glsl，最终顶点着色器在fragmentShader
-     */
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!
-    gl.shaderSource(fragmentShader, fragmentShaderSource)
-    gl.compileShader(fragmentShader)
-
-    // 创建程序并连接着色器，也是套路写法
-    const program = gl.createProgram()!
-    // 连接顶点着色器和片段着色器
-    gl.attachShader(program, vertexShader)
-    gl.attachShader(program, fragmentShader)
-    gl.linkProgram(program)
+    const program = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource)!
     gl.useProgram(program)
 
     /**
      * 获取顶点着色器中的a_position变量的地址，上面的glsl中有进行定义
      */
-    const positionAttributeLocation = gl.getAttribLocation(
-        program,
-        'a_position',
-    )
+    const positionAttributeLocation = gl.getAttribLocation(program, 'a_position')
 
     // 创建缓冲区并传递顶点数据
     const positionBuffer = gl.createBuffer()
