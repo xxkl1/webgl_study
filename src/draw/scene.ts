@@ -101,14 +101,32 @@ const drawScene = function (gl: WebGLRenderingContext) {
     // and we only want to see objects between 0.1 units
     // and 100 units away from the camera.
 
+    // 创键透视变换矩阵，用于将三维物体投影到2维上
+
+    // 视角是45度
     const fieldOfView = (45 * Math.PI) / 180 // in radians
+    // aspect是视角的宽高比
     const aspect = canvas.clientWidth / canvas.clientHeight
+    // 近剪裁面的距离
+    /**
+     * 近剪裁面: 与相机的距离小于这个值的物体都不会被渲染
+     */
     const zNear = 0.1
+    // 远剪裁面的距离
+    /**
+     * 远剪裁面: 与相机的距离大于这个值的物体都不会被渲染
+     */
+    /**
+     * 近剪裁面和远剪裁面用于限制物体渲染的范围
+     * 一般用于减少了需要在屏幕上渲染的物体数量，优化性能
+     * 同时控制物体是否进入视野，控制物体可见性
+     */
     const zFar = 100.0
     const projectionMatrix = mat4.create()
 
     // note: glmatrix.js always has the first argument
     // as the destination to receive the result.
+    // 创键透视矩阵
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
 
     // Set the drawing position to the "identity" point, which is
@@ -117,10 +135,11 @@ const drawScene = function (gl: WebGLRenderingContext) {
 
     // Now move the drawing position a bit to where we want to
     // start drawing the square.
+    // 将modelViewMatrix进行平移，只平移z抽，平移的量是6
     mat4.translate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -6.0],
+        [-0.0, 0.0, -6.0], // x, y, z
     ) // amount to translate
 
     // Tell WebGL how to pull out the positions from the position
