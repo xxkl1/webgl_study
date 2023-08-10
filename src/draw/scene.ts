@@ -6,11 +6,17 @@ type ProgramInfo = {
     program: WebGLProgram
     attribLocations: {
         vertexPosition: number
+        vertexColor: number
     }
     uniformLocations: {
         projectionMatrix: WebGLUniformLocation
         modelViewMatrix: WebGLUniformLocation
     }
+}
+
+type Buffers = {
+    position: WebGLBuffer,
+    color: WebGLBuffer,
 }
 
 const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
@@ -22,19 +28,25 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
      */
     const vsSource = `
         attribute vec4 aVertexPosition;
+        attribute vec4 aVertexColor;
 
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
 
-        void main() {
+        varying lowp vec4 vColor;
+
+        void main(void) {
             gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            vColor = aVertexColor;
         }
     `
 
     // 白色
     const fsSource = `
-        void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        varying lowp vec4 vColor;
+
+        void main(void) {
+            gl_FragColor = vColor;
         }
     `
 
@@ -44,32 +56,16 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
-            vertexPosition: gl.getAttribLocation(
-                shaderProgram,
-                'aVertexPosition',
-            ),
+            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
         },
         uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(
-                shaderProgram,
-                'uProjectionMatrix',
-            )!,
-            modelViewMatrix: gl.getUniformLocation(
-                shaderProgram,
-                'uModelViewMatrix',
-            )!,
+            projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix')!,
+            modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')!,
         },
     }
 
     return programInfo
-}
-
-const initBuffers = function (gl: WebGLRenderingContext) {
-    const positionBuffer = initPositionBuffer(gl)
-
-    return {
-        position: positionBuffer,
-    }
 }
 
 const initPositionBuffer = function (gl: WebGLRenderingContext) {
@@ -85,6 +81,40 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
 
     return positionBuffer
+}
+
+const initColorBuffer = function (gl: WebGLRenderingContext) {
+    const colors = [
+        1.0,
+        1.0,
+        1.0,
+        1.0, // 白
+        1.0,
+        0.0,
+        0.0,
+        1.0, // 红
+        0.0,
+        1.0,
+        0.0,
+        1.0, // 绿
+        0.0,
+        0.0,
+        1.0,
+        1.0, // 蓝
+    ]
+
+    const colorBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
+
+    return colorBuffer
+}
+
+const initBuffers = function (gl: WebGLRenderingContext) : Buffers {
+    return {
+        position: initPositionBuffer(gl)!,
+        color: initColorBuffer(gl)!,
+    }
 }
 
 const drawScene = function (gl: WebGLRenderingContext) {
@@ -157,6 +187,7 @@ const drawScene = function (gl: WebGLRenderingContext) {
     // buffer into the vertexPosition attribute.
     // 将缓冲区绑定到顶点属性，并启用顶点属性
     setPositionAttribute(gl, buffers, programInfo)
+    setColorAttribute(gl, buffers, programInfo)
 
     // Tell WebGL to use our program when drawing
     gl.useProgram(programInfo.program)
@@ -186,7 +217,7 @@ const drawScene = function (gl: WebGLRenderingContext) {
 // buffer into the vertexPosition attribute.
 const setPositionAttribute = function (
     gl: WebGLRenderingContext,
-    buffers: WebGLBuffer,
+    buffers: Buffers,
     programInfo: ProgramInfo,
 ) {
     const numComponents = 2 // pull out 2 values per iteration
@@ -197,7 +228,7 @@ const setPositionAttribute = function (
     const offset = 0 // how many bytes inside the buffer to start from
     // buffers.position是真正的buffers对象，不知道为啥要这样设计
     // 这个bindBuffer的调用其实不用，因为上面已经绑定过了
-    // gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
 
     // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
     // 通俗地将，就是将缓存区的数据，传递给顶点着色器中的变量，缓存区现在有上面的[1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]数据
@@ -211,6 +242,30 @@ const setPositionAttribute = function (
     )
     // 启用顶点属性数组，这里是启用了顶点着色器的vertexPosition变量
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
+}
+
+// Tell WebGL how to pull out the colors from the color buffer
+// into the vertexColor attribute.
+const setColorAttribute = function (
+    gl: WebGLRenderingContext,
+    buffers: Buffers,
+    programInfo: ProgramInfo,
+) {
+    const numComponents = 4
+    const type = gl.FLOAT
+    const normalize = false
+    const stride = 0
+    const offset = 0
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexColor,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset,
+    )
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor)
 }
 
 export { initBuffers, drawScene }
