@@ -226,8 +226,7 @@ const setPositionAttribute = function (
     const stride = 0 // how many bytes to get from one set of values to the next
     // 0 = use type and numComponents above
     const offset = 0 // how many bytes inside the buffer to start from
-    // buffers.position是真正的buffers对象，不知道为啥要这样设计
-    // 这个bindBuffer的调用其实不用，因为上面已经绑定过了
+    // TODO: 理解webgl缓冲区的设计
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
 
     // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
