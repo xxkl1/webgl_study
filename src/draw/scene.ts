@@ -1,5 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initShaderProgram } from '../utils/shader'
+import { log } from '../utils'
 
 type ProgramInfo = {
     program: WebGLProgram
@@ -74,8 +75,12 @@ const initBuffers = function (gl: WebGLRenderingContext) {
 const initPositionBuffer = function (gl: WebGLRenderingContext) {
     // 套路写法
     const positionBuffer = gl.createBuffer()
-    // 将ARRAY_BUFFER绑定到positionBuffer
+    // 将ARRAY_BUFFER绑定到positionBuffer，后面读取positionBuffer就相当于读取gl.ARRAY_BUFFER
+    // 想要操作gl.ARRAY_BUFFER，不能直接操作positionBuffer，要使用vertexAttribPointer等函数进行操作
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+
+    // 定义一个正方形，四个顶点，每个顶点两个值
+    // const positions = [0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5]
     const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
 
@@ -104,9 +109,14 @@ const drawScene = function (gl: WebGLRenderingContext) {
 
     // 创键透视变换矩阵，用于将三维物体投影到2维上
 
-    // 视角是45度
+    // fov角度是45度，fov角度代表视野角度，视野角度越大，物体投影占据视野范围的大小比例就越小，导致物体看起来越小
     const fieldOfView = (45 * Math.PI) / 180 // in radians
     // aspect是视角的宽高比
+    // 视角的宽高比，会影响到看到的物体的宽高比
+    // 如果把aspect改成1，那么看到的物体就是和canvas一样的宽高比
+    // 如果采用和canvas一样的宽高比，那么看到的物体就是正方形
+    // 采用和canvas一样的宽高比的原因是，使得渲染中保持物体的原始宽高比，确保透视投影矩阵的视野宽高比与屏幕的宽高比一致
+    // 对于顶点数据看，渲染出来的图形，应该是正方形，边长是2
     const aspect = canvas.clientWidth / canvas.clientHeight
     // 近剪裁面的距离
     /**
@@ -140,7 +150,7 @@ const drawScene = function (gl: WebGLRenderingContext) {
     mat4.translate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -6.0], // x, y, z
+        [-0.0, 0.0, -6.0], // x, y, z, z轴的正坐标是，从屏幕垂直射出，负坐标是垂直射入屏幕，所以z越小，离屏幕越远，画出的图像会越小
     ) // amount to translate
 
     // Tell WebGL how to pull out the positions from the position
@@ -167,6 +177,7 @@ const drawScene = function (gl: WebGLRenderingContext) {
     {
         const offset = 0 // 从顶点缓冲区的第几个顶点开始绘制
         const vertexCount = 4 // 绘制的顶点数量
+        // 4个顶点信息，绘制两个三角形
         gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount)
     }
 }
@@ -184,9 +195,12 @@ const setPositionAttribute = function (
     const stride = 0 // how many bytes to get from one set of values to the next
     // 0 = use type and numComponents above
     const offset = 0 // how many bytes inside the buffer to start from
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+    // buffers.position是真正的buffers对象，不知道为啥要这样设计
+    // 这个bindBuffer的调用其实不用，因为上面已经绑定过了
+    // gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
 
     // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
+    // 通俗地将，就是将缓存区的数据，传递给顶点着色器中的变量，缓存区现在有上面的[1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]数据
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition, // programInfo.attribLocations.vertexPosition存放的是，sharder程序顶点着色器，顶点的数据变量的索引
         numComponents, // 每个顶点数据分量数，这里是2维
