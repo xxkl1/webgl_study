@@ -39,6 +39,7 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
 
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource)!
 
+    // gl.getAttribLocation: 用于获取顶点着色器中顶点属性变量的位置（索引）的函数
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
@@ -144,12 +145,14 @@ const drawScene = function (gl: WebGLRenderingContext) {
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
+    // 将缓冲区绑定到顶点属性，并启用顶点属性
     setPositionAttribute(gl, buffers, programInfo)
 
     // Tell WebGL to use our program when drawing
     gl.useProgram(programInfo.program)
 
     // Set the shader uniforms
+    // uniformMatrix4fv用于向顶点着色器中传递 4x4 矩阵数据的函数
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
@@ -162,8 +165,8 @@ const drawScene = function (gl: WebGLRenderingContext) {
     )
 
     {
-        const offset = 0
-        const vertexCount = 4
+        const offset = 0 // 从顶点缓冲区的第几个顶点开始绘制
+        const vertexCount = 4 // 绘制的顶点数量
         gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount)
     }
 }
@@ -182,14 +185,17 @@ const setPositionAttribute = function (
     // 0 = use type and numComponents above
     const offset = 0 // how many bytes inside the buffer to start from
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+
+    // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
     gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexPosition,
-        numComponents,
-        type,
-        normalize,
-        stride,
-        offset,
+        programInfo.attribLocations.vertexPosition, // programInfo.attribLocations.vertexPosition存放的是，sharder程序顶点着色器，顶点的数据变量的索引
+        numComponents, // 每个顶点数据分量数，这里是2维
+        type, // 数据类型
+        normalize, // 是否需要归一化，这里是否，归一化理解先跳过
+        stride, //  每个数据项的字节跨度，通常是 0 表示数据是紧密排列的
+        offset, // 数据项的偏移量，即从缓冲区的起始位置开始的字节偏移。
     )
+    // 启用顶点属性数组，这里是启用了顶点着色器的vertexPosition变量
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
 }
 
