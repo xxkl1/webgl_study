@@ -73,7 +73,12 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
     const positionBuffer = gl.createBuffer()
     // 将ARRAY_BUFFER绑定到positionBuffer，后面读取positionBuffer就相当于读取gl.ARRAY_BUFFER
     // 想要操作gl.ARRAY_BUFFER，不能直接操作positionBuffer，要使用vertexAttribPointer等函数进行操作
+
+    // bindBuffer起到绑定webgl缓冲区上下文的作用
+    // 看起来，如果positionBuffer是一个空的buffer，那么会把当前ARRAY_BUFFER的索引绑定到positionBuffer上
+    // 如果positionBuffer不是一个空的buffer，会给ARRAY_BUFFER设置索引的起始
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+    log('positionBuffer:', positionBuffer)
 
     // 定义一个正方形，四个顶点，每个顶点两个值
     // const positions = [0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5]
