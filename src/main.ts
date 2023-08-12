@@ -1,5 +1,5 @@
 import { drawLine } from './draw/line'
-import { drawScene } from './draw/scene'
+import { drawSceneRotate } from './draw/scene'
 
 const getGl = function () {
     const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement
@@ -19,7 +19,7 @@ const main = function () {
     if (gl) {
         reset(gl)
         // drawLine(gl)
-        drawScene(gl)
+        drawSceneRotate(gl)
     }
 }
 

@@ -15,8 +15,8 @@ type ProgramInfo = {
 }
 
 type Buffers = {
-    position: WebGLBuffer,
-    color: WebGLBuffer,
+    position: WebGLBuffer
+    color: WebGLBuffer
 }
 
 const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
@@ -56,12 +56,21 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
-            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+            vertexPosition: gl.getAttribLocation(
+                shaderProgram,
+                'aVertexPosition',
+            ),
             vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
         },
         uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix')!,
-            modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')!,
+            projectionMatrix: gl.getUniformLocation(
+                shaderProgram,
+                'uProjectionMatrix',
+            )!,
+            modelViewMatrix: gl.getUniformLocation(
+                shaderProgram,
+                'uModelViewMatrix',
+            )!,
         },
     }
 
@@ -78,7 +87,6 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
     // 看起来，如果positionBuffer是一个空的buffer，那么会把当前ARRAY_BUFFER的索引绑定到positionBuffer上
     // 如果positionBuffer不是一个空的buffer，会给ARRAY_BUFFER设置索引的起始
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-    log('positionBuffer:', positionBuffer)
 
     // 定义一个正方形，四个顶点，每个顶点两个值
     // const positions = [0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5]
@@ -115,17 +123,20 @@ const initColorBuffer = function (gl: WebGLRenderingContext) {
     return colorBuffer
 }
 
-const initBuffers = function (gl: WebGLRenderingContext) : Buffers {
+const initBuffers = function (gl: WebGLRenderingContext): Buffers {
     return {
         position: initPositionBuffer(gl)!,
         color: initColorBuffer(gl)!,
     }
 }
 
-const drawScene = function (gl: WebGLRenderingContext) {
+const drawScene = function (
+    gl: WebGLRenderingContext,
+    programInfo: ProgramInfo,
+    buffers: Buffers,
+    squareRotation: number = 0,
+) {
     const canvas = gl.canvas as HTMLCanvasElement
-    const programInfo = getProgramInfo(gl)
-    const buffers = initBuffers(gl)
     gl.clearColor(0.0, 0.0, 0.0, 1.0) // Clear to black, fully opaque
     gl.clearDepth(1.0) // Clear everything
     gl.enable(gl.DEPTH_TEST) // Enable depth testing
@@ -178,6 +189,13 @@ const drawScene = function (gl: WebGLRenderingContext) {
     // Set the drawing position to the "identity" point, which is
     // the center of the scene.
     const modelViewMatrix = mat4.create()
+
+    mat4.rotate(
+        modelViewMatrix, // destination matrix
+        modelViewMatrix, // matrix to rotate
+        squareRotation, // amount to rotate in radians
+        [0, 0, 1],
+    ) // axis to rotate around
 
     // Now move the drawing position a bit to where we want to
     // start drawing the square.
@@ -272,4 +290,36 @@ const setColorAttribute = function (
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor)
 }
 
-export { initBuffers, drawScene }
+// 绘制静态的正方形
+const drawSceneStatic = function (gl: WebGLRenderingContext) {
+    const programInfo = getProgramInfo(gl)
+    const buffers = initBuffers(gl)
+    drawScene(gl, programInfo, buffers, 30)
+}
+
+// 绘制旋转的正方形
+const drawSceneRotate = function (gl: WebGLRenderingContext) {
+    const programInfo = getProgramInfo(gl)
+    const buffers = initBuffers(gl)
+    drawScene(gl, programInfo, buffers, 30)
+
+    let then = 0
+
+    let squareRotation = 0.0
+    let deltaTime = 0
+
+    // Draw the scene repeatedly
+    function render(now: number) {
+        now *= 0.001 // convert to seconds
+        deltaTime = now - then
+        then = now
+
+        drawScene(gl, programInfo, buffers, squareRotation)
+        squareRotation += deltaTime
+
+        requestAnimationFrame(render)
+    }
+    requestAnimationFrame(render)
+}
+
+export { drawSceneStatic, drawSceneRotate }
