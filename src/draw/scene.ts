@@ -20,6 +20,19 @@ type Buffers = {
     indices: WebGLBuffer
 }
 
+/**
+ * 获取着色器程序，并且还有sharder中，各个变量在内存中的索引，使得后期对sharder中的变量进行赋值成为可能
+ * 
+ * @param gl
+ * @returns
+ * {
+ *  program: 着色器程序，包含链接好的顶点着色器和片元着色器
+ *  attribLocations: 存放的是，属性变量在内存中的位置
+ *  uniformLocations: 存放的是，矩阵变量在内存中的位置
+ * }
+ * 对于attribLocations，后面会使用gl.vertexAttribPointer配置，sharder如何从缓冲区读取数据
+ * 对于uniformLocations，会使用gl.uniformMatrix4fv对，对sharder中的矩阵变量进行赋值，注意，这里赋值不会从缓冲区赋值，而是直接使用js变量，mat4类型进行赋值
+ */
 const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
     /**
      * vec4: 四维向量，mat4：4维矩阵
@@ -34,6 +47,9 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
 
+        // varying 代表声明在顶点着色器和片元着色器之间传递数据的变量
+        // lowp代表低精度
+        // vec4是类型
         varying lowp vec4 vColor;
 
         void main(void) {
@@ -42,7 +58,8 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
         }
     `
 
-    // 白色
+    // gl_FragColor是着色器最终的颜色
+    // vColor的意思是，使用顶点着色器传递过来的颜色vColor
     const fsSource = `
         varying lowp vec4 vColor;
 
@@ -93,17 +110,17 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
     // const positions = [0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5]
     const positions = [
         // Front face
-        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, // xyz xyz xyz xyz
         // Back face
-        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, // xyz xyz xyz xyz
         // Top face
-        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, // xyz xyz xyz xyz
         // Bottom face
-        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, // xyz xyz xyz xyz
         // Right face
-        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, // xyz xyz xyz xyz
         // Left face
-        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, // xyz xyz xyz xyz
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
 
@@ -111,6 +128,9 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
 }
 
 const initColorBuffer = function (gl: WebGLRenderingContext) {
+    // 传入buffer的colors，是动态拼接的
+    // initPositionBuffer不是动态拼接的原因是，initPositionBuffer中的24个顶点信息，数据不一样的
+    // 而对于colors，每个面的颜色是一样的，即colors中只有6种不同的数据，所以可以动态拼接
     const faceColors = [
         [1.0, 1.0, 1.0, 1.0], // Front face: white
         [1.0, 0.0, 0.0, 1.0], // Back face: red
@@ -126,8 +146,10 @@ const initColorBuffer = function (gl: WebGLRenderingContext) {
       for (var j = 0; j < faceColors.length; ++j) {
         const c = faceColors[j];
         // Repeat each color four times for the four vertices of the face
+        // 重复四次，是因为一个面有四个顶点，每个点颜色都一样
         colors = colors.concat(c, c, c, c);
     }
+
 
     const colorBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
@@ -143,42 +165,12 @@ const initIndexBuffer = function (gl: WebGLRenderingContext) {
     // indices into the vertex array to specify each triangle's
     // position.
     const indices = [
-      0,
-      1,
-      2,
-      0,
-      2,
-      3, // front
-      4,
-      5,
-      6,
-      4,
-      6,
-      7, // back
-      8,
-      9,
-      10,
-      8,
-      10,
-      11, // top
-      12,
-      13,
-      14,
-      12,
-      14,
-      15, // bottom
-      16,
-      17,
-      18,
-      16,
-      18,
-      19, // right
-      20,
-      21,
-      22,
-      20,
-      22,
-      23, // left
+      0, 1, 2, 0, 2, 3, // front
+      4, 5, 6, 4, 6, 7, // back
+      8, 9, 10, 8, 10, 11, // top
+      12, 13, 14, 12, 14, 15, // bottom
+      16, 17, 18, 16, 18, 19, // right
+      20, 21, 22, 20, 22, 23, // left
     ];
     // Now send the element array to GL
     gl.bufferData(
@@ -189,6 +181,16 @@ const initIndexBuffer = function (gl: WebGLRenderingContext) {
     return indexBuffer;
 }
 
+/**
+ * 初始化缓冲区
+ * 需要初始化三种缓冲区position，color，indices
+ * position存放的是，所有顶点的位置信息，每个面4个顶点，一共6个面，顶点数量是4*6=24，一个顶点的信息是三维，即xyz，所以position数组长度是3*24=72
+ * color存放的是，所有顶点的颜色信息，每个面4个顶点，一共6个面，顶点数量是4*6=24，一个顶点的信息是四维，即rgba，所以color数组长度是4*24=96
+ * indices 存放的是，由于webgl只能绘制三角形，所以需要将正方形的顶点，那么原本一个正方形需要4个顶点，拆分成两个三角形，需要6个顶点，有6面，即6*6个顶点，所以indices数组长度是6*6=36
+ * indices的子元素，对应的是position和color的子元素的索引，例如0就代表，positions的前3个，color的前4个子元素，当然到时应该是对应buffer的索引
+ * @param gl 
+ * @returns 
+ */
 const initBuffers = function (gl: WebGLRenderingContext): Buffers {
     return {
         position: initPositionBuffer(gl)!,
@@ -297,11 +299,14 @@ const drawScene = function (
 
     // Set the shader uniforms
     // uniformMatrix4fv用于向顶点着色器中传递 4x4 矩阵数据的函数
+
+    // 应用透视矩阵
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
         projectionMatrix,
     )
+    // 应用坐标转换矩阵
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.modelViewMatrix,
         false,
@@ -323,7 +328,7 @@ const setPositionAttribute = function (
     buffers: Buffers,
     programInfo: ProgramInfo,
 ) {
-    const numComponents = 3 // pull out 2 values per iteration
+    const numComponents = 3 // pull out 3 values per iteration
     const type = gl.FLOAT // the data in the buffer is 32bit floats
     const normalize = false // don't normalize
     const stride = 0 // how many bytes to get from one set of values to the next
@@ -336,7 +341,7 @@ const setPositionAttribute = function (
     // 通俗地将，就是将缓存区的数据，传递给顶点着色器中的变量，缓存区现在有上面的[1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]数据
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition, // programInfo.attribLocations.vertexPosition存放的是，sharder程序顶点着色器，顶点的数据变量的索引
-        numComponents, // 每个顶点数据分量数，这里是2维
+        numComponents, // 每个顶点数据分量数，这里是3维，即xyz，每次从缓冲区里面，需要三个三个地进行读取
         type, // 数据类型
         normalize, // 是否需要归一化，这里是否，归一化理解先跳过
         stride, //  每个数据项的字节跨度，通常是 0 表示数据是紧密排列的
@@ -361,7 +366,7 @@ const setColorAttribute = function (
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexColor,
-        numComponents,
+        numComponents, // rgba，每个顶点数据分量数，这里是4维，即rgba，每次从缓冲区里面，需要四个四个地进行读取
         type,
         normalize,
         stride,
@@ -372,6 +377,7 @@ const setColorAttribute = function (
 
 // 绘制静态的正方形
 const drawSceneStatic = function (gl: WebGLRenderingContext) {
+    // 获取sharder和sharder变量索引
     const programInfo = getProgramInfo(gl)
     const buffers = initBuffers(gl)
     drawScene(gl, programInfo, buffers, 30)
@@ -379,9 +385,11 @@ const drawSceneStatic = function (gl: WebGLRenderingContext) {
 
 // 绘制旋转的正方形
 const drawSceneRotate = function (gl: WebGLRenderingContext) {
+    // 获取sharder和sharder变量索引
     const programInfo = getProgramInfo(gl)
+
+    // 获取缓冲区对象
     const buffers = initBuffers(gl)
-    drawScene(gl, programInfo, buffers, 30)
 
     let then = 0
 
