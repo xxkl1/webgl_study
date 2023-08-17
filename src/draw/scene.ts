@@ -213,13 +213,7 @@ const initBuffers = function (gl: WebGLRenderingContext): Buffers {
     }
 }
 
-const drawScene = function (
-    gl: WebGLRenderingContext,
-    programInfo: ProgramInfo,
-    buffers: Buffers,
-    cubeRotation: number = 0,
-) {
-    const canvas = gl.canvas as HTMLCanvasElement
+const clear = function (gl: WebGLRenderingContext) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0) // Clear to black, fully opaque
     gl.clearDepth(1.0) // Clear everything
     gl.enable(gl.DEPTH_TEST) // Enable depth testing
@@ -228,7 +222,9 @@ const drawScene = function (
     // Clear the canvas before we start drawing on it.
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+}
 
+const setUniformMatrix= function (gl: WebGLRenderingContext, programInfo: ProgramInfo, cubeRotation: number = 0) {
     // Create a perspective matrix, a special matrix that is
     // used to simulate the distortion of perspective in a camera.
     // Our field of view is 45 degrees, with a width/height
@@ -238,6 +234,7 @@ const drawScene = function (
 
     // 创键透视变换矩阵，用于将三维物体投影到2维上
 
+    const canvas = gl.canvas as HTMLCanvasElement
     // fov角度是45度，fov角度代表视野角度，视野角度越大，物体投影占据视野范围的大小比例就越小，导致物体看起来越小
     const fieldOfView = (45 * Math.PI) / 180 // in radians
     // aspect是视角的宽高比
@@ -303,17 +300,6 @@ const drawScene = function (
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
-    // 将缓冲区绑定到顶点属性，并启用顶点属性
-    setPositionAttribute(gl, buffers, programInfo)
-    setColorAttribute(gl, buffers, programInfo)
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-    gl.useProgram(programInfo.program)
-
-    // Set the shader uniforms
-    // uniformMatrix4fv用于向顶点着色器中传递 4x4 矩阵数据的函数
-
     // 应用透视矩阵
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
@@ -326,13 +312,47 @@ const drawScene = function (
         false,
         modelViewMatrix,
     )
+}
 
-    {
-        const vertexCount = 36;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-    }
+const setIndexBuffer = function (gl: WebGLRenderingContext, buffers: Buffers) {
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+}
+
+const useSharderProgram = function (gl: WebGLRenderingContext, programInfo: ProgramInfo) {
+    // Tell WebGL to use our program when drawing
+    gl.useProgram(programInfo.program)
+}
+
+const drawSceneElements= function (gl: WebGLRenderingContext) {
+    const vertexCount = 36;
+    const type = gl.UNSIGNED_SHORT;
+    const offset = 0;
+    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+}
+
+const bindSceneBuffers = function (
+    gl: WebGLRenderingContext,
+    programInfo: ProgramInfo,
+    buffers: Buffers,
+    cubeRotation: number = 0,
+) {
+    // 将缓冲区绑定到顶点属性，并启用顶点属性
+    setPositionAttribute(gl, buffers, programInfo)
+    setColorAttribute(gl, buffers, programInfo)
+    setIndexBuffer(gl, buffers)
+    setUniformMatrix(gl,programInfo, cubeRotation)
+}
+
+const drawScene = function (
+    gl: WebGLRenderingContext,
+    programInfo: ProgramInfo,
+    buffers: Buffers,
+    cubeRotation: number = 0,
+) {
+    clear(gl)
+    useSharderProgram(gl, programInfo)
+    bindSceneBuffers(gl, programInfo, buffers, cubeRotation)
+    drawSceneElements(gl)
 }
 
 // Tell WebGL how to pull out the positions from the position
@@ -416,12 +436,10 @@ const drawSceneStatic = function (gl: WebGLRenderingContext) {
 const drawSceneRotate = function (gl: WebGLRenderingContext) {
     // 获取sharder和sharder变量索引
     const programInfo = getProgramInfo(gl)
-
     // 获取缓冲区对象
     const buffers = initBuffers(gl)
 
     let then = 0
-
     let cubeRotation = 0.0;
     let deltaTime = 0
 
