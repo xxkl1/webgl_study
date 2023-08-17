@@ -15,10 +15,11 @@ const drawScene = function (
     programInfo: ProgramInfo,
     buffers: Buffers,
     cubeRotation: number = 0,
+    texture: WebGLTexture,
 ) {
     clear(gl)
     useSharderProgram(gl, programInfo)
-    bindSceneBuffers(gl, programInfo, buffers, cubeRotation)
+    bindSceneBuffers(gl, programInfo, buffers, cubeRotation, texture)
     drawSceneElements(gl)
 }
 

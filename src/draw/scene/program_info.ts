@@ -23,29 +23,28 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
      */
     const vsSource = `
         attribute vec4 aVertexPosition;
-        attribute vec4 aVertexColor;
+        attribute vec2 aTextureCoord;
 
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
 
-        // varying 代表声明在顶点着色器和片元着色器之间传递数据的变量
-        // lowp代表低精度
-        // vec4是类型
-        varying lowp vec4 vColor;
+        varying highp vec2 vTextureCoord;
 
         void main(void) {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-            vColor = aVertexColor;
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        vTextureCoord = aTextureCoord;
         }
     `
 
     // gl_FragColor是着色器最终的颜色
     // vColor的意思是，使用顶点着色器传递过来的颜色vColor
     const fsSource = `
-        varying lowp vec4 vColor;
+        varying highp vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
 
         void main(void) {
-            gl_FragColor = vColor;
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
         }
     `
 
@@ -55,21 +54,13 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
-            vertexPosition: gl.getAttribLocation(
-                shaderProgram,
-                'aVertexPosition',
-            ),
-            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+          vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition")!,
+          textureCoord: gl.getAttribLocation(shaderProgram, "aTextureCoord")!,
         },
         uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(
-                shaderProgram,
-                'uProjectionMatrix',
-            )!,
-            modelViewMatrix: gl.getUniformLocation(
-                shaderProgram,
-                'uModelViewMatrix',
-            )!,
+          projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix")!,
+          modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix")!,
+          uSampler: gl.getUniformLocation(shaderProgram, "uSampler")!,
         },
     }
 

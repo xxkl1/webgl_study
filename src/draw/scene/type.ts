@@ -2,17 +2,18 @@ type ProgramInfo = {
     program: WebGLProgram
     attribLocations: {
         vertexPosition: number
-        vertexColor: number
+        textureCoord: number
     }
     uniformLocations: {
         projectionMatrix: WebGLUniformLocation
         modelViewMatrix: WebGLUniformLocation
+        uSampler: WebGLUniformLocation
     }
 }
 
 type Buffers = {
     position: WebGLBuffer
-    color: WebGLBuffer
+    textureCoord: WebGLBuffer
     indices: WebGLBuffer
 }
 

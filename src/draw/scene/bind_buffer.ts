@@ -22,7 +22,7 @@ const setPositionAttribute = function (
      * enableVertexAttribArray进行sharder属性绑定开启，下面那个顶点颜色也是这样
      * 对于gl.ELEMENT_ARRAY_BUFFER 索引数据的缓冲区，就不是这样了，直接gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
      * 然后，调用gl.drawElements绘制就行，没有所谓的绑定sharder属性，因为索引没有对应的sharder属性
-    */
+     */
 
     // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
     // 通俗地将，就是将缓存区的数据，传递给顶点着色器中的变量，缓存区现在有上面的[1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]数据
@@ -42,35 +42,11 @@ const setPositionAttribute = function (
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
 }
 
-// Tell WebGL how to pull out the colors from the color buffer
-// into the vertexColor attribute.
-const setColorAttribute = function (
+const setUniformMatrix = function (
     gl: WebGLRenderingContext,
-    buffers: Buffers,
     programInfo: ProgramInfo,
+    cubeRotation: number = 0,
 ) {
-    const numComponents = 4
-    const type = gl.FLOAT
-    const normalize = false
-    const stride = 0
-    const offset = 0
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
-
-    // 画一个正方体，需要绘制36个顶点，
-    // eg. 对于索引缓冲区，第一个顶点索引是0，那么读取color的第一组数据，根据numComponents === 4，我们读取0 - 3 数据块
-    // 第二个顶点是1，那么读取color的第二组数据，即4 - 7
-    gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexColor,
-        numComponents, // rgba，每个顶点数据分量数，这里是4维，即rgba，每次从缓冲区里面，需要四个四个地进行读取
-        type,
-        normalize,
-        stride,
-        offset,
-    )
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor)
-}
-
-const setUniformMatrix= function (gl: WebGLRenderingContext, programInfo: ProgramInfo, cubeRotation: number = 0) {
     // Create a perspective matrix, a special matrix that is
     // used to simulate the distortion of perspective in a camera.
     // Our field of view is 45 degrees, with a width/height
@@ -130,19 +106,19 @@ const setUniformMatrix= function (gl: WebGLRenderingContext, programInfo: Progra
         modelViewMatrix, // matrix to rotate
         cubeRotation, // amount to rotate in radians
         [0, 0, 1],
-      ); // axis to rotate around (Z)
-      mat4.rotate(
+    ) // axis to rotate around (Z)
+    mat4.rotate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to rotate
         cubeRotation * 0.7, // amount to rotate in radians
         [0, 1, 0],
-      ); // axis to rotate around (Y)
-      mat4.rotate(
+    ) // axis to rotate around (Y)
+    mat4.rotate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to rotate
         cubeRotation * 0.3, // amount to rotate in radians
         [1, 0, 0],
-      ); // axis to rotate around (X)
+    ) // axis to rotate around (X)
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
@@ -161,7 +137,40 @@ const setUniformMatrix= function (gl: WebGLRenderingContext, programInfo: Progra
 }
 
 const setIndexBuffer = function (gl: WebGLRenderingContext, buffers: Buffers) {
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
+}
+
+// 告诉 WebGL 如何从缓冲区中提取纹理坐标
+const setTextureAttribute = function (
+    gl: WebGLRenderingContext,
+    buffers: Buffers,
+    programInfo: ProgramInfo,
+    texture: WebGLTexture,
+) {
+    const num = 2 // 每个坐标由 2 个值组成
+    const type = gl.FLOAT // 缓冲区中的数据为 32 位浮点数
+    const normalize = false // 不做标准化处理
+    const stride = 0 // 从一个坐标到下一个坐标要获取多少字节
+    const offset = 0 // 从缓冲区内的第几个字节开始获取数据
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord)
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.textureCoord,
+        num,
+        type,
+        normalize,
+        stride,
+        offset,
+    )
+    gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord)
+
+    // Tell WebGL we want to affect texture unit 0
+    gl.activeTexture(gl.TEXTURE0)
+
+    // Bind the texture to texture unit 0
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    // Tell the shader we bound the texture to texture unit 0
+    gl.uniform1i(programInfo.uniformLocations.uSampler, 0)
 }
 
 const bindSceneBuffers = function (
@@ -169,14 +178,13 @@ const bindSceneBuffers = function (
     programInfo: ProgramInfo,
     buffers: Buffers,
     cubeRotation: number = 0,
+    texture: WebGLTexture,
 ) {
     // 将缓冲区绑定到顶点属性，并启用顶点属性
     setPositionAttribute(gl, buffers, programInfo)
-    setColorAttribute(gl, buffers, programInfo)
+    setTextureAttribute(gl, buffers, programInfo, texture)
     setIndexBuffer(gl, buffers)
-    setUniformMatrix(gl,programInfo, cubeRotation)
+    setUniformMatrix(gl, programInfo, cubeRotation)
 }
 
-export {
-    bindSceneBuffers,
-}
+export { bindSceneBuffers }

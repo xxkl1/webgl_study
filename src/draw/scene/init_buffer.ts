@@ -1,4 +1,4 @@
-import { Buffers } from './type';
+import { Buffers } from './type'
 
 const initPositionBuffer = function (gl: WebGLRenderingContext) {
     // 套路写法
@@ -15,75 +15,168 @@ const initPositionBuffer = function (gl: WebGLRenderingContext) {
     // const positions = [0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5]
     const positions = [
         // Front face
-        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, // xyz xyz xyz xyz
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0, // xyz xyz xyz xyz
         // Back face
-        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, // xyz xyz xyz xyz
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0, // xyz xyz xyz xyz
         // Top face
-        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, // xyz xyz xyz xyz
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0, // xyz xyz xyz xyz
         // Bottom face
-        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, // xyz xyz xyz xyz
+        -1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0, // xyz xyz xyz xyz
         // Right face
-        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, // xyz xyz xyz xyz
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0, // xyz xyz xyz xyz
         // Left face
-        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, // xyz xyz xyz xyz
-    ];
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        -1.0, // xyz xyz xyz xyz
+    ]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
 
     return positionBuffer
 }
 
-const initColorBuffer = function (gl: WebGLRenderingContext) {
-    // 传入buffer的colors，是动态拼接的
-    // initPositionBuffer不是动态拼接的原因是，initPositionBuffer中的24个顶点信息，数据不一样的
-    // 而对于colors，每个面的颜色是一样的，即colors中只有6种不同的数据，所以可以动态拼接
-    const faceColors = [
-        [1.0, 1.0, 1.0, 1.0], // Front face: white
-        [1.0, 0.0, 0.0, 1.0], // Back face: red
-        [0.0, 1.0, 0.0, 1.0], // Top face: green
-        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-        [1.0, 0.0, 1.0, 1.0], // Left face: purple
-      ];
-
-      // Convert the array of colors into a table for all the vertices.
-      let colors : number[] = [];
-
-      for (var j = 0; j < faceColors.length; ++j) {
-        const c = faceColors[j];
-        // Repeat each color four times for the four vertices of the face
-        // 重复四次，是因为一个面有四个顶点，每个点颜色都一样
-        colors = colors.concat(c, c, c, c);
-    }
-
-
-    const colorBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
-
-    return colorBuffer
-}
-
 const initIndexBuffer = function (gl: WebGLRenderingContext) {
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    const indexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
     // This array defines each face as two triangles, using the
     // indices into the vertex array to specify each triangle's
     // position.
     const indices = [
-      0, 1, 2, 0, 2, 3, // front
-      4, 5, 6, 4, 6, 7, // back
-      8, 9, 10, 8, 10, 11, // top
-      12, 13, 14, 12, 14, 15, // bottom
-      16, 17, 18, 16, 18, 19, // right
-      20, 21, 22, 20, 22, 23, // left
-    ];
+        0,
+        1,
+        2,
+        0,
+        2,
+        3, // front
+        4,
+        5,
+        6,
+        4,
+        6,
+        7, // back
+        8,
+        9,
+        10,
+        8,
+        10,
+        11, // top
+        12,
+        13,
+        14,
+        12,
+        14,
+        15, // bottom
+        16,
+        17,
+        18,
+        16,
+        18,
+        19, // right
+        20,
+        21,
+        22,
+        20,
+        22,
+        23, // left
+    ]
     // Now send the element array to GL
     gl.bufferData(
-      gl.ELEMENT_ARRAY_BUFFER,
-      new Uint16Array(indices),
-      gl.STATIC_DRAW,
-    );
-    return indexBuffer;
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW,
+    )
+    return indexBuffer
+}
+
+const initTextureBuffer = function (gl: WebGLRenderingContext) {
+    const textureCoordBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer)
+
+    const textureCoordinates = [
+        // Front
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Back
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Top
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Bottom
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Right
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Left
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    ]
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(textureCoordinates),
+        gl.STATIC_DRAW,
+    )
+
+    return textureCoordBuffer
 }
 
 /**
@@ -102,11 +195,9 @@ const initIndexBuffer = function (gl: WebGLRenderingContext) {
 const initBuffers = function (gl: WebGLRenderingContext): Buffers {
     return {
         position: initPositionBuffer(gl)!,
-        color: initColorBuffer(gl)!,
+        textureCoord: initTextureBuffer(gl)!,
         indices: initIndexBuffer(gl)!,
     }
 }
 
-export {
-    initBuffers,
-}
+export { initBuffers }

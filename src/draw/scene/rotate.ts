@@ -1,5 +1,6 @@
 import { drawScene } from './draw';
 import { initBuffers } from './init_buffer';
+import { loadCubeTexture } from './load_texture';
 import { getProgramInfo } from './program_info';
 
 /**
@@ -20,6 +21,8 @@ const drawSceneRotate = function (gl: WebGLRenderingContext) {
     // 获取缓冲区对象
     const buffers = initBuffers(gl)
 
+    const texture = loadCubeTexture(gl)
+
     let then = 0
     let cubeRotation = 0.0;
     let deltaTime = 0
@@ -30,7 +33,7 @@ const drawSceneRotate = function (gl: WebGLRenderingContext) {
         deltaTime = now - then
         then = now
 
-        drawScene(gl, programInfo, buffers, cubeRotation)
+        drawScene(gl, programInfo, buffers, cubeRotation, texture)
         cubeRotation += deltaTime;
 
         requestAnimationFrame(render)
