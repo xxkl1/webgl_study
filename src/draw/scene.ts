@@ -2,6 +2,17 @@ import { mat4 } from 'gl-matrix'
 import { initShaderProgram } from '../utils/shader'
 import { log } from '../utils'
 
+/**
+ * note1 - 两种缓冲区类型
+ * gl.ARRAY_BUFFER和gl.ELEMENT_ARRAY_BUFFER
+ * gl.ARRAY_BUFFER: 用于存放，顶点数据，例如顶点的位置、颜色、法线等
+ * gl.ELEMENT_ARRAY_BUFFER: 用于存储索引数据的缓冲区绑定点。索引数据指定了如何连接顶点以形成图元（例如三角形）。
+ *
+ * note2 - 缓冲区
+ * 缓冲区buffer的设计，看起来是webgl，不能直接读取js变量，所以将数据通过缓冲区进行转接，c++调用webgl也是这样类似的设计，然后使用js buffer对象来进行webgl缓冲区上下文关联
+ * 写入前需要调用一下bindBuffer，读取前，也需要调用bindBuffer一下，实现上下文关联
+ */
+
 type ProgramInfo = {
     program: WebGLProgram
     attribLocations: {
@@ -188,8 +199,11 @@ const initIndexBuffer = function (gl: WebGLRenderingContext) {
  * color存放的是，所有顶点的颜色信息，每个面4个顶点，一共6个面，顶点数量是4*6=24，一个顶点的信息是四维，即rgba，所以color数组长度是4*24=96
  * indices 存放的是，由于webgl只能绘制三角形，所以需要将正方形的顶点，那么原本一个正方形需要4个顶点，拆分成两个三角形，需要6个顶点，有6面，即6*6个顶点，所以indices数组长度是6*6=36
  * indices的子元素，对应的是position和color的子元素的索引，例如0就代表，positions的前3个，color的前4个子元素，当然到时应该是对应buffer的索引
- * @param gl 
- * @returns 
+ *
+ * 初始化完对应的js数组后，需要将js数组的数据，写入到webgl缓冲区中
+ * 所以initBuffers最终目的是初始化webgl缓冲区的顶点数据，和图元索引数据
+ * @param gl
+ * @returns
  */
 const initBuffers = function (gl: WebGLRenderingContext): Buffers {
     return {
@@ -334,11 +348,22 @@ const setPositionAttribute = function (
     const stride = 0 // how many bytes to get from one set of values to the next
     // 0 = use type and numComponents above
     const offset = 0 // how many bytes inside the buffer to start from
-    // TODO: 理解webgl缓冲区的设计
+
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+
+    /**
+     * 对于gl.ARRAY_BUFFER，这个存放顶点数据的缓冲区，需要固定使用vertexAttribPointer进sharder属性绑定
+     * enableVertexAttribArray进行sharder属性绑定开启，下面那个顶点颜色也是这样
+     * 对于gl.ELEMENT_ARRAY_BUFFER 索引数据的缓冲区，就不是这样了，直接gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+     * 然后，调用gl.drawElements绘制就行，没有所谓的绑定sharder属性，因为索引没有对应的sharder属性
+    */
 
     // 该函数的作用是 作用是将缓冲区中的数据与顶点属性关联起来
     // 通俗地将，就是将缓存区的数据，传递给顶点着色器中的变量，缓存区现在有上面的[1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0]数据
+
+    // 画一个正方体，需要绘制36个顶点，
+    // eg. 对于索引缓冲区，第一个顶点索引是0，那么读取position的第一组数据，根据numComponents === 3，我们读取0 - 2 数据块
+    // 第二个顶点是1，那么读取position的第二组数据，即3 - 5
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition, // programInfo.attribLocations.vertexPosition存放的是，sharder程序顶点着色器，顶点的数据变量的索引
         numComponents, // 每个顶点数据分量数，这里是3维，即xyz，每次从缓冲区里面，需要三个三个地进行读取
@@ -364,6 +389,10 @@ const setColorAttribute = function (
     const stride = 0
     const offset = 0
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
+
+    // 画一个正方体，需要绘制36个顶点，
+    // eg. 对于索引缓冲区，第一个顶点索引是0，那么读取color的第一组数据，根据numComponents === 4，我们读取0 - 3 数据块
+    // 第二个顶点是1，那么读取color的第二组数据，即4 - 7
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexColor,
         numComponents, // rgba，每个顶点数据分量数，这里是4维，即rgba，每次从缓冲区里面，需要四个四个地进行读取
