@@ -155,6 +155,18 @@ const initTextureBuffer = function (gl: WebGLRenderingContext) {
     const textureCoordBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer)
 
+    // 一个面有四个顶点，每个顶点是uv坐标，uv取值范围是0-1，所以一个面的uv坐标是8个值
+    // uv贴图原理，贴图里面的像素块，可以用范围为0,0 到 1,1 uv坐标来表示，相当于0-1是一个百分比
+    /**
+     * 根据单面front的例子，分析具体是怎么贴图的
+     * 可以从顶点buffer得到，front的顶点信息是 0, 1, 2, 0, 2, 3, 代表两个三角形顶点的索引
+     * 先分析第一个三角形0, 1, 2
+     * 根据索引值和position buffer，坐标值是 0 -> -1.0, -1.0, 1.0, 1 -> 1.0, -1.0, 1.0, 2 -> 1.0, 1.0, 1.0
+     * 即左下角到右下角到右上角
+     * 根据texture buffer得到贴图的uv坐标是 0 -> 0, 0, 1 -> 1, 0, 2 -> 1, 1
+     * 对应贴图的左上角，右上角，右下角，由于webgl渲染上下颠倒，所以得上下翻转一下，即左下角，右下角，右上角，刚好就和坐标系的顺序一致了
+     * 接着就是webgl根据uv进行采样了贴图了
+     */
     const textureCoordinates = [
         // Front
         0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
@@ -186,7 +198,6 @@ const initTextureBuffer = function (gl: WebGLRenderingContext) {
  * color存放的是，所有顶点的颜色信息，每个面4个顶点，一共6个面，顶点数量是4*6=24，一个顶点的信息是四维，即rgba，所以color数组长度是4*24=96
  * indices 存放的是，由于webgl只能绘制三角形，所以需要将正方形的顶点，那么原本一个正方形需要4个顶点，拆分成两个三角形，需要6个顶点，有6面，即6*6个顶点，所以indices数组长度是6*6=36
  * indices的子元素，对应的是position和color的子元素的索引，例如0就代表，positions的前3个，color的前4个子元素，当然到时应该是对应buffer的索引
- *
  * 初始化完对应的js数组后，需要将js数组的数据，写入到webgl缓冲区中
  * 所以initBuffers最终目的是初始化webgl缓冲区的顶点数据，和图元索引数据
  * @param gl

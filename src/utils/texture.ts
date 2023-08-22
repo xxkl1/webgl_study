@@ -23,6 +23,7 @@ const loadTexture = function (gl: WebGLRenderingContext, url: string) {
     const srcFormat = gl.RGBA
     const srcType = gl.UNSIGNED_BYTE
     const pixel = new Uint8Array([0, 0, 255, 255]) // opaque blue
+    // 看起来，texImage2D对于不同长度的参数列表，参数的定义是不一样的
     gl.texImage2D(
         gl.TEXTURE_2D,
         level,
@@ -50,8 +51,10 @@ const loadTexture = function (gl: WebGLRenderingContext, url: string) {
         // WebGL1 has different requirements for power of 2 images
         // vs. non power of 2 images so check if the image is a
         // power of 2 in both dimensions.
+        // isPowerOf2代表2的n次方
         if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
             // Yes, it's a power of 2. Generate mips.
+            // 生成多级渐远纹理，用于优化渲染
             gl.generateMipmap(gl.TEXTURE_2D)
         } else {
             // No, it's not a power of 2. Turn off mips and set

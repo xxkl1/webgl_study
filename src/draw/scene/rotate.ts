@@ -27,6 +27,8 @@ const drawSceneRotate = function (gl: WebGLRenderingContext) {
     let cubeRotation = 0.0;
     let deltaTime = 0
 
+
+
     // Draw the scene repeatedly
     function render(now: number) {
         now *= 0.001 // convert to seconds
@@ -38,6 +40,7 @@ const drawSceneRotate = function (gl: WebGLRenderingContext) {
 
         requestAnimationFrame(render)
     }
+
     requestAnimationFrame(render)
 }
 

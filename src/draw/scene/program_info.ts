@@ -31,8 +31,8 @@ const getProgramInfo = function (gl: WebGLRenderingContext): ProgramInfo {
         varying highp vec2 vTextureCoord;
 
         void main(void) {
-        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-        vTextureCoord = aTextureCoord;
+            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            vTextureCoord = aTextureCoord;
         }
     `
 
