@@ -4,6 +4,18 @@ import { loadCubeTexture } from './load_texture';
 import { getProgramInfo } from './program_info';
 
 /**
+ * 绘制的大体流程
+ * 定义了三个buffer，position，texture uv坐标，index 顶点 buffer
+ * 定义了sharder，进行顶点着色，片元着色
+ * 绘制的时候，从index buffer，得到对应的texture uv坐标信息，确定好三角形的三个顶点的uv
+ * 从index buffer，得到对应的position坐标信息，确定好三角形的三个顶点的坐标
+ * 确定好了三角形顶点具体在3d视图中的坐标，还有素材uv坐标，就可以通过webgl，uv插值进行渲染
+ * 组成一个面需要两个三角形，那么渲染6个面，其实就是在三维空间中绘制12个三角形
+ *
+ * 动起来的原理是，通过每帧都通过着色器，使用矩阵进行坐标的变换
+ */
+
+/**
  * note1 - 两种缓冲区类型
  * gl.ARRAY_BUFFER和gl.ELEMENT_ARRAY_BUFFER
  * gl.ARRAY_BUFFER: 用于存放，顶点数据，例如顶点的位置、颜色、法线等
