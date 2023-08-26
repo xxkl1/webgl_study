@@ -87,7 +87,7 @@ const setUniformMatrix = function (
 
     // note: glmatrix.js always has the first argument
     // as the destination to receive the result.
-    // 创键透视矩阵
+    // 创键透视矩阵，zNear, zFar不会改成投影面距离相机的距离，所以不会和普通的透视投影一样，调整zNear改变物体成像的大小，zNear, zFar仅仅用于裁剪视线范围
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
 
     // Set the drawing position to the "identity" point, which is
