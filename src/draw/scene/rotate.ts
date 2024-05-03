@@ -39,11 +39,11 @@ const drawSceneRotate = function (gl: WebGLRenderingContext) {
     let cubeRotation = 0.0;
     let deltaTime = 0
 
-    // 渲染一个面
-    setTimeout(() => {
-        drawScene(gl, programInfo, buffers, cubeRotation, texture)
-    }, 500)
-    return
+    // // 渲染一个面
+    // setTimeout(() => {
+    //     drawScene(gl, programInfo, buffers, cubeRotation, texture)
+    // }, 500)
+    // return
 
 
 
